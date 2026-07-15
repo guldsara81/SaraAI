@@ -1,35 +1,80 @@
 """
 SaraAI Core
 
-Detta är huvudklassen för SaraAI.
-All funktionalitet kommer successivt att byggas ut härifrån.
+High-level public API for the SaraAI framework.
 """
+
+from __future__ import annotations
+
+from saraai.config.model_config import ModelConfig
+from saraai.training.training_pipeline import TrainingPipeline
 
 
 class SaraAI:
     """
-    SaraAI huvudklass.
+    Main entry point for the SaraAI framework.
     """
 
-    def __init__(self, name: str = "SaraAI"):
+    def __init__(
+        self,
+        name: str = "SaraAI",
+        config: ModelConfig | None = None,
+    ):
         self.name = name
         self.version = "0.1.0"
 
-    def info(self) -> str:
-        """
-        Returnerar information om AI:n.
-        """
-        return (
-            f"{self.name} "
-            f"(version {self.version})\n"
-            "Status: Under utveckling"
+        if config is None:
+            config = ModelConfig()
+
+        self.config = config
+
+        self.pipeline = TrainingPipeline(
+            self.config,
         )
 
-    def chat(self, message: str) -> str:
+    def info(self) -> str:
         """
-        Enkel platshållare för framtida språkmodell.
+        Return framework information.
         """
+
         return (
-            f"Du skrev: {message}\n\n"
-            "Jag är ännu inte tränad, men snart kommer jag kunna prata."
+            f"{self.name} "
+            f"(version {self.version})"
         )
+
+    def train(
+        self,
+        text: str,
+    ) -> float:
+        """
+        Train SaraAI on a text string.
+
+        Returns:
+            Training loss.
+        """
+
+        self.pipeline.load_text(text)
+
+        self.pipeline.build_model()
+
+        return self.pipeline.train()
+
+    def chat(
+        self,
+        message: str,
+    ) -> str:
+        """
+        Placeholder until text generation is implemented.
+        """
+
+        return (
+            "Chat generation has not been "
+            "implemented yet.\n\n"
+            f"You wrote:\n{message}"
+        )
+        def save(
+    self,
+    path: str,
+) -> None:
+
+    self.pipeline.save(path)

@@ -6,12 +6,13 @@ from __future__ import annotations
 
 from torch.optim import Adam
 
+from saraai.checkpoint.checkpoint_manager import CheckpointManager
 from saraai.config.model_config import ModelConfig
 from saraai.datasets.text_dataset import TextDataset
 from saraai.model.data_loader import LanguageDataLoader
 from saraai.model.language_model import LanguageModel
-from saraai.model.training_step import TrainingStep
 from saraai.model.trainer import Trainer
+from saraai.model.training_step import TrainingStep
 from saraai.tokenizer.tokenizer import Tokenizer
 from saraai.tokenizer.vocabulary import Vocabulary
 
@@ -39,9 +40,13 @@ class TrainingPipeline:
 
         self.model: LanguageModel | None = None
 
+        self.optimizer = None
+
         self.training_step: TrainingStep | None = None
 
         self.trainer: Trainer | None = None
+
+        self.checkpoint_manager = CheckpointManager()
 
     def load_text(
         self,
@@ -77,14 +82,14 @@ class TrainingPipeline:
             self.config,
         )
 
-        optimizer = Adam(
+        self.optimizer = Adam(
             self.model.parameters(),
             lr=self.config.learning_rate,
         )
 
         self.training_step = TrainingStep(
             self.model,
-            optimizer,
+            self.optimizer,
         )
 
         self.trainer = Trainer(
@@ -119,3 +124,34 @@ class TrainingPipeline:
         return self.trainer.train_epoch(
             self.dataloader,
         )
+
+    def save(
+        self,
+        path: str,
+        epoch: int = 0,
+        loss: float = 0.0,
+    ) -> None:
+        """
+        Save the current training checkpoint.
+        """
+
+        if self.model is None:
+            raise RuntimeError(
+                "Model has not been built."
+            )
+
+        if self.optimizer is None:
+            raise RuntimeError(
+                "Optimizer has not been created."
+            )
+
+        self.checkpoint_manager.save(
+            path=path,
+            model=self.model,
+            optimizer=self.optimizer,
+            vocabulary=self.vocabulary,
+            config=self.config,
+            epoch=epoch,
+            loss=loss,
+        )
+        
