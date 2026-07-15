@@ -10,6 +10,7 @@ import math
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 from saraai.config.model_config import ModelConfig
 
@@ -44,16 +45,16 @@ class SelfAttention(nn.Module):
 
         self.dropout = nn.Dropout(config.dropout)
 
-self.register_buffer(
-    "mask",
-    torch.tril(
-        torch.ones(
-            config.max_sequence_length,
-            config.max_sequence_length,
-            dtype=torch.bool,
+        self.register_buffer(
+            "mask",
+            torch.tril(
+                torch.ones(
+                    config.max_sequence_length,
+                    config.max_sequence_length,
+                    dtype=torch.bool,
+                )
+            ),
         )
-    ),
-)
 
     def forward(
         self,
@@ -87,16 +88,14 @@ self.register_buffer(
         ]
 
         scores = scores.masked_fill(
-    ~mask,
-    float("-inf"),
-)
+            ~mask,
+            float("-inf"),
+        )
 
-        import torch.nn.functional as F
-
-weights = F.softmax(
-    scores,
-    dim=-1,
-)
+        weights = F.softmax(
+            scores,
+            dim=-1,
+        )
 
         weights = self.dropout(weights)
 

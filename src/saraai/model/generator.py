@@ -19,7 +19,8 @@ class TextGenerator:
         model: LanguageModel,
     ):
         self.model = model
-            @torch.no_grad()
+
+    @torch.no_grad()
     def generate(
         self,
         input_ids: torch.Tensor,
@@ -31,23 +32,23 @@ class TextGenerator:
 
         self.model.eval()
 
-       tokens = input_ids.clone()
+        tokens = input_ids.clone()
 
-for _ in range(max_new_tokens):
+        for _ in range(max_new_tokens):
 
-    logits = self.model(tokens)
+            logits = self.model(tokens)
 
-    next_token_logits = logits[:, -1, :]
+            next_token_logits = logits[:, -1, :]
 
-    next_token = torch.argmax(
-        next_token_logits,
-        dim=-1,
-        keepdim=True,
-    )
+            next_token = torch.argmax(
+                next_token_logits,
+                dim=-1,
+                keepdim=True,
+            )
 
-    tokens = torch.cat(
-        (tokens, next_token),
-        dim=1,
-    )
+            tokens = torch.cat(
+                (tokens, next_token),
+                dim=1,
+            )
 
-return tokens
+        return tokens
