@@ -1,44 +1,92 @@
 """
-SaraAI Dataset
+SaraAI Text Dataset
 
-Läser text och förbereder träningsdata.
+Converts text into training sequences for language modeling.
 """
+
+from __future__ import annotations
 
 from pathlib import Path
 
+import torch
+from torch.utils.data import Dataset
 
-class TextDataset:
-    """Läser textfiler för träning."""
+from saraai.tokenizer.tokenizer import Tokenizer
 
-    def __init__(self):
-        self.texts = []
 
-    def load_file(self, filename: str):
+class TextDataset(Dataset):
+    """
+    Dataset for next-token prediction.
+    """
+
+    def __init__(
+        self,
+        tokenizer: Tokenizer,
+        sequence_length: int,
+    ):
+        super().__init__()
+
+        self.tokenizer = tokenizer
+        self.sequence_length = sequence_length
+
+        self.tokens: list[int] = []
+
+    def load_text(
+        self,
+        text: str,
+    ) -> None:
         """
-        Läser en textfil.
+        Add text to the dataset.
         """
 
-        path = Path(filename)
+        token_ids = self.tokenizer.encode(text)
 
-        text = path.read_text(
-            encoding="utf-8"
+        self.tokens.extend(token_ids)
+
+    def load_file(
+        self,
+        filename: str,
+    ) -> None:
+        """
+        Load a UTF-8 text file.
+        """
+
+        text = Path(filename).read_text(
+            encoding="utf-8",
         )
 
-        self.texts.append(text)
+        self.load_text(text)
 
-    def add_text(self, text: str):
-        """
-        Lägger till text direkt.
-        """
+    def __len__(
+        self,
+    ) -> int:
 
-        self.texts.append(text)
+        return max(
+            0,
+            len(self.tokens)
+            - self.sequence_length,
+        )
 
-    def get_texts(self):
-        """
-        Returnerar all text.
-        """
+    def __getitem__(
+        self,
+        index: int,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
 
-        return self.texts
+        input_tokens = self.tokens[
+            index : index + self.sequence_length
+        ]
 
-    def size(self):
-        return len(self.texts)
+        target_tokens = self.tokens[
+            index + 1 : index + self.sequence_length + 1
+        ]
+
+        return (
+            torch.tensor(
+                input_tokens,
+                dtype=torch.long,
+            ),
+            torch.tensor(
+                target_tokens,
+                dtype=torch.long,
+            ),
+        )
