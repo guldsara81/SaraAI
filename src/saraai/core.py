@@ -72,9 +72,13 @@ class SaraAI:
             "implemented yet.\n\n"
             f"You wrote:\n{message}"
         )
-        def save(
-    self,
-    path: str,
-) -> None:
 
-    self.pipeline.save(path)
+    def save(
+        self,
+        path: str,
+    ) -> None:
+        """
+        Save the current model checkpoint to disk.
+        """
+
+        self.pipeline.save(path)

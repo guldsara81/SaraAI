@@ -1,5 +1,5 @@
-from saraai.saraai import SaraAI
+from saraai.training.training_pipeline import TrainingPipeline
 
 __all__ = [
-    "SaraAI",
+    "TrainingPipeline",
 ]
